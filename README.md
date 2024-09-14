@@ -14,6 +14,9 @@ The project is configured using **ROS2 launch files**, where you can specify tur
 - [ROS2 Humble (or your preferred ROS2 distribution)](https://docs.ros.org/en/humble/Installation.html)
 - Colcon build system
 
+## **Preview**
+[![Video showcase](https://i9.ytimg.com/vi/gXcGxA444ao/mqdefault.jpg?v=66e5fe1d&sqp=CID8l7cG-oaymwEmCMACELQB8quKqQMa8AEB-AH-BYAC4AOKAgwIABABGEggUihyMA8=&rs=AOn4CLDRon4o5QMFTmuTxAqGtUpZY7iCgg)](https://youtu.be/gXcGxA444ao)
+
 ## **Installation**
 
 1. Clone this repository:
