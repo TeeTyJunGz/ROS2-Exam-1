@@ -166,7 +166,7 @@ class copy_controller(Node):
                     flag = 0
                     if self.index < len(target) - 1:
                         self.index += 1
-                        self.get_logger().info(f'pizza: {self.index}')
+                        # self.get_logger().info(f'pizza: {self.index}')
                         
                     elif self.index == len(target) - 1:
                         target = []
