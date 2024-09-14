@@ -30,6 +30,8 @@ install(PROGRAMS
   scripts/teleop_interface_node.py
   scripts/teleop_scheduler.py
   scripts/controller.py
+  scripts/coppy_scheduler.py
+  scripts/coppy_controller.py
   DESTINATION lib/${PROJECT_NAME}
 )
 
