@@ -34,11 +34,12 @@ def generate_launch_description():
 
         )
     launch_description.add_action( turtlesim_copy_node )
-    # kill_turtle = ExecuteProcess(
-    #     cmd=["ros2 service call /remove_turtle turtlesim/srv/Kill \"name: 'turtle1'\""],
-    #          shell =True
-    #     )
-    # launch_description.add_action( kill_turtle )
+    
+    kill_turtle = ExecuteProcess(
+        cmd=["ros2 service call /copy/remove_turtle turtlesim/srv/Kill \"name: 'turtle1'\""],
+             shell =True
+        )
+    launch_description.add_action( kill_turtle )
 
 
     # spawn_turtle = ExecuteProcess(
@@ -48,7 +49,8 @@ def generate_launch_description():
     # launch_description.add_action( spawn_turtle )
     
     package_name = 'turtlesim_promax'
-    executable_name = ['controller', 'teleop_scheduler']
+    executable_name = ['controller', 'teleop_scheduler', 'coppy_controller']
+    copy_turtle_name = ['foxy']
 
     for i in range(len(executable_name)):
         
@@ -72,13 +74,25 @@ def generate_launch_description():
             name = executable_name[i],
         )
 
-        else:
-            noise_generator = Node(
-            package = package_name,
-            namespace = '',
-            executable = executable_name[i] + '.py',
-            name = executable_name[i],
-        )
+        elif executable_name[i] == 'coppy_controller':
+            for j in range(len(copy_turtle_name)):
+            
+                copy_control = Node(
+                package = package_name,
+                namespace = copy_turtle_name[j],
+                executable = executable_name[i] + '.py',
+                name = executable_name[i],
+                )
+                launch_description.add_action(copy_control)
+
+            
+        # else:
+        #     noise_generator = Node(
+        #     package = package_name,
+        #     namespace = '',
+        #     executable = executable_name[i] + '.py',
+        #     name = executable_name[i],
+        # )
         launch_description.add_action(noise_generator)
         
     return launch_description
