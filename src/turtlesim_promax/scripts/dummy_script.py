@@ -1,6 +1,4 @@
 #!/usr/bin/python3
-
-from turtlesim_promax.dummy_module import dummy_function, dummy_var
 import rclpy
 from rclpy.node import Node
 
