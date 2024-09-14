@@ -1,37 +1,35 @@
 #!/usr/bin/python3
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Float64,Bool,String
+from std_msgs.msg import Bool, String
 
 class Scheduler(Node):
     def __init__(self):
         super().__init__('scheduler_node')
+        self.pizza_ready = False  # Initialize default state
+        self.clear_ready = False  # Initialize default state
         self.create_subscription(Bool, '/pizzaReady', self.pizzaReady_callback, 10)
         self.create_subscription(Bool, '/clearReady', self.clearReady_callback, 10)
         self.state_publisher = self.create_publisher(String, '/state', 10)
-        self.create_timer(1.0 / self.freq, self.timer_callback)
+        self.create_timer(0.1, self.timer_callback)  # Timer to call state method at 10Hz
 
-
-    def pizzaReady_callback(self,msg : Bool):
+    def pizzaReady_callback(self, msg: Bool):
         self.pizza_ready = msg.data
 
-    def clearReady_callback(self,msg : Bool):
+    def clearReady_callback(self, msg: Bool):
         self.clear_ready = msg.data
 
     def state(self):
-        msg = String
-        if self.clear_ready == True:
-             msg.data = 'clear'
+        msg = String()  # Correct instantiation of String message
+        if self.clear_ready:
+            msg.data = 'clear'
         else:
             msg.data = 'teleop'
         self.state_publisher.publish(msg)
+        # self.get_logger().info(f'Published state: {msg.data}')
 
     def timer_callback(self):
-            self.target()
-
-
-    
-
+        self.state()
 
 def main(args=None):
     rclpy.init(args=args)
@@ -40,5 +38,5 @@ def main(args=None):
     node.destroy_node()
     rclpy.shutdown()
 
-if __name__=='__main__':
+if __name__ == '__main__':
     main()
