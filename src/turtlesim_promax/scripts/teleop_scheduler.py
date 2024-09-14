@@ -17,9 +17,9 @@ class Scheduler(Node):
         self.create_subscription(Bool, '/clearReady', self.clearReady_callback, 10)
         self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
 
-        self.state_publisher = self.create_publisher(String, 'state', 10)
-        self.pizza_ready_publisher = self.create_publisher(Bool, 'pizzaReady', 10)
-        self.save_ready_publisher = self.create_publisher(Bool, 'savedReady', 10)
+        self.state_publisher = self.create_publisher(String, '/teleop' + self.get_namespace() + '/state', 10)
+        self.pizza_ready_publisher = self.create_publisher(Bool, '/teleop' + self.get_namespace() + '/pizzaReady', 10)
+        self.save_ready_publisher = self.create_publisher(Bool, '/teleop' + self.get_namespace() + '/savedReady', 10)
         self.create_timer(0.01, self.timer_callback)  # Timer to call state method at 10Hz
 
 

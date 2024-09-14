@@ -19,14 +19,21 @@ def generate_launch_description():
 
     turtlesim_node = Node(
             package='turtlesim_plus',
-            namespace='',
+            namespace='teleop',
             executable='turtlesim_plus_node.py',
             name='turtlesim'
 
         )
     launch_description.add_action( turtlesim_node )
 
+    turtlesim_copy_node = Node(
+            package='turtlesim_plus',
+            namespace='copy',
+            executable='turtlesim_plus_node.py',
+            name='turtlesim'
 
+        )
+    launch_description.add_action( turtlesim_copy_node )
     # kill_turtle = ExecuteProcess(
     #     cmd=["ros2 service call /remove_turtle turtlesim/srv/Kill \"name: 'turtle1'\""],
     #          shell =True

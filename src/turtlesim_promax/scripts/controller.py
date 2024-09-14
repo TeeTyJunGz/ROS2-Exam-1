@@ -22,9 +22,9 @@ class controller(Node):
         
         self.yaml_create()
         
-        self.turtle_client = self.create_client(Spawn, '/spawn_turtle')
-        self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
-        self.kill_client = self.create_client(Kill, '/remove_turtle')
+        self.turtle_client = self.create_client(Spawn, '/teleop/spawn_turtle')
+        self.pizza_client = self.create_client(GivePosition, '/teleop/spawn_pizza')
+        self.kill_client = self.create_client(Kill, '/teleop/remove_turtle')
 
         self.declare_parameter('pizza_max', 20)
         self.declare_parameter('Kp', 1.5)
@@ -36,17 +36,18 @@ class controller(Node):
         self.turtle_count = 0
         self.kill_count = 0
         
-        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, '/teleop' + self.get_namespace() + '/cmd_vel', 10)
         
-        self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
-        self.state_sub = self.create_subscription(String, 'state', self.state_callback, 10)
-        self.pizza_sub = self.create_subscription(Bool, 'pizzaReady', self.pizza_callback, 10)
-        self.saved_sub = self.create_subscription(Bool, 'savedReady', self.saved_callback, 10)
+        
+        self.pose_sub = self.create_subscription(Pose, '/teleop' + self.get_namespace() + '/pose', self.turtle_callback, 10)
+        self.state_sub = self.create_subscription(String, '/teleop' + self.get_namespace() + '/state', self.state_callback, 10)
+        self.pizza_sub = self.create_subscription(Bool, '/teleop' + self.get_namespace() + '/pizzaReady', self.pizza_callback, 10)
+        self.saved_sub = self.create_subscription(Bool, '/teleop' + self.get_namespace() + '/savedReady', self.saved_callback, 10)
 
         self.pizzaReady = False
         self.state = 'teleop'
-        self.eaten_client = self.create_client(Empty, 'eat')
+        self.eaten_client = self.create_client(Empty, '/teleop' + self.get_namespace() + '/eat')
                 
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []

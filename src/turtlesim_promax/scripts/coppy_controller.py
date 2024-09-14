@@ -18,9 +18,7 @@ from std_srvs.srv import Empty
 class controller(Node):
     def __init__(self):
         super().__init__('Controller_Node')
-        
-        self.yaml_create()
-        
+                
         self.turtle_client = self.create_client(Spawn, '/spawn_turtle')
         self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/remove_turtle')
