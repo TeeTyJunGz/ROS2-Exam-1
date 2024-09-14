@@ -41,7 +41,7 @@ def generate_launch_description():
     # launch_description.add_action( spawn_turtle )
     
     package_name = 'turtlesim_promax'
-    executable_name = ['controller', 'teleop_scheuler']
+    executable_name = ['controller']
 
     for i in range(len(executable_name)):
         

@@ -72,6 +72,8 @@ class KeyboardControl(Node):
         key = sys.stdin.read(1)
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
         self.p = False
+        self.s = False
+        self.c = False
         return key
 
     def run_key_listener(self):
@@ -80,7 +82,7 @@ class KeyboardControl(Node):
                 key = self.get_key()
                 if key == 'p':
                     self.p = True
-                if key == 's':
+                if key == 'l':
                     self.s = True
                 if key == 'c':
                     self.c = True

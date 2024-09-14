@@ -27,7 +27,6 @@ class controller(Node):
 
         self.create_timer(0.1, self.timer_callback)
 
-        self.pizza_list = {}
         self.turtle_pose = np.array([0.0, 0.0, 0.0]) #x, y, theta
         self.mouse_pose = np.array([0.0, 0.0]) #x, y
         self.mouseRviz_pose = np.array([0.0, 0.0]) #x, y
@@ -99,7 +98,12 @@ class controller(Node):
     def pizza_callback(self, msg: Bool):
         if msg.data:
             self.give_pizza(self.turtle_pose)
-            self.pizza_list['targets'].append(self.turtle_pose[:3])
+            pos = [0.0, 0.0]
+            pos[0] = float(self.turtle_pose[0])
+            pos[1] = float(self.turtle_pose[1])
+            
+            # self.get_logger().info(f'Unknown parameter: {pos}')
+            self.pizza_list['pizza_position'].append(pos)
         
     def saved_callback(self, msg: Bool):
         if msg.data:
