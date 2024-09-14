@@ -25,11 +25,9 @@ class controller(Node):
         self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/remove_turtle')
 
-        self.create_timer(0.1, self.timer_callback)
+        self.create_timer(0.01, self.timer_callback)
 
         self.turtle_pose = np.array([0.0, 0.0, 0.0]) #x, y, theta
-        self.mouse_pose = np.array([0.0, 0.0]) #x, y
-        self.mouseRviz_pose = np.array([0.0, 0.0]) #x, y
         self.pizza_count = 0
         self.turtle_count = 0
         self.kill_count = 0
@@ -47,6 +45,8 @@ class controller(Node):
         self.eaten_client = self.create_client(Empty, 'eat')
         
         self.cmd_rc = np.array([0.0, 0.0])
+        self.pos_list = []
+        self.saved_count = 1
 
     def yaml_create(self):
         empty_data = {}  # Or [] if you want an empty list
@@ -54,7 +54,11 @@ class controller(Node):
         # Write to the YAML file
         with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(empty_data, file)
-            self.pizza_list = {'pizza_position': []}
+            self.pizza_list = {'pizza_position_1': [],
+                               'pizza_position_2': [],
+                               'pizza_position_3': [], 
+                               'pizza_position_4': [], 
+                              }
      
     def yaml_write(self):
         with open('pizza_position/test.yaml', 'w') as file:
@@ -70,22 +74,6 @@ class controller(Node):
         self.turtle_pose[0] = msg.x
         self.turtle_pose[1] = msg.y
         self.turtle_pose[2] = msg.theta
-
-    def mouse_callback(self, msg):
-        self.mouse_pose[0] = msg.x
-        self.mouse_pose[1] = msg.y
-        
-        self.mouse_list.append(np.copy(self.mouse_pose))
-
-        self.give_pizza(self.mouse_pose)
-        
-    def mouseRviz_callback(self, msg):
-        self.mouse_pose[0] = msg.pose.position.x + 5.0
-        self.mouse_pose[1] = msg.pose.position.y + 5.0
-        
-        self.mouse_list.append(np.copy(self.mouse_pose))
-        
-        self.give_pizza(self.mouse_pose)
         
     def cmd_vel_callback(self, msg: Twist):
         self.cmd_rc[0] = msg.linear.x
@@ -102,11 +90,48 @@ class controller(Node):
             pos[1] = float(self.turtle_pose[1])
             
             # self.get_logger().info(f'Unknown parameter: {pos}')
-            self.pizza_list['pizza_position'].append(pos)
+            self.pos_list.append(pos)
+            
+            if self.saved_count == 1:
+                self.pizza_list['pizza_position_1'].append(pos)
+                
+            elif self.saved_count == 2:
+                self.pizza_list['pizza_position_2'].append(pos)
+
+            elif self.saved_count == 3:
+                self.pizza_list['pizza_position_3'].append(pos)
+
+            elif self.saved_count == 4:
+                self.pizza_list['pizza_position_4'].append(pos)
+
+            else:
+                pass
         
     def saved_callback(self, msg: Bool):
         if msg.data:
+            self.pos_list = []
+            
+            if self.saved_count == 1:
+                self.get_logger().info('Saved 1st Position')
+                self.saved_count += 1
+                
+            elif self.saved_count == 2:
+                self.get_logger().info('Saved 2nd Position')
+                self.saved_count += 1
+
+            elif self.saved_count == 3:
+                self.get_logger().info('Saved 3rd Position')
+                self.saved_count += 1
+
+            elif self.saved_count == 4:
+                self.get_logger().info('Saved 4th Position')
+
+            else:
+                self.get_logger().info('Already saved 4 times!')
+                
+            
             self.yaml_write()
+            
         
     def turtle_spawn(self):
         pos_req = Spawn.Request()
@@ -163,7 +188,7 @@ class controller(Node):
             self.cmd_vel(self.cmd_rc[0], self.cmd_rc[1])
             
         elif self.state == 'clear':
-            pass 
+            self.get_logger().info('Clear')
         
             
         # if len(self.mouse_list) > 0:
