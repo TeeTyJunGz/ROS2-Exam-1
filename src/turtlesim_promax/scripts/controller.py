@@ -5,6 +5,7 @@ import rclpy
 import numpy as np
 
 from rclpy.node import Node
+from rcl_interfaces.msg import SetParametersResult
 
 from geometry_msgs.msg import Twist, Point, PoseStamped
 from turtlesim.msg import Pose
@@ -25,6 +26,9 @@ class controller(Node):
         self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/remove_turtle')
 
+        self.declare_parameter('pizza_max', 20)
+        self.declare_parameter('Kp', 1.5)
+        
         self.create_timer(0.01, self.timer_callback)
 
         self.turtle_pose = np.array([0.0, 0.0, 0.0]) #x, y, theta
@@ -43,11 +47,32 @@ class controller(Node):
         self.pizzaReady = False
         self.state = 'teleop'
         self.eaten_client = self.create_client(Empty, 'eat')
-        
+                
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []
         self.saved_count = 1
-
+        
+        self.pizza_max = self.get_parameter('pizza_max').get_parameter_value().integer_value
+        self.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        
+        # Add callback for parameter changes
+        self.add_on_set_parameters_callback(self.set_param_callback)
+        
+    def set_param_callback(self, params):
+        for param in params:
+            if param.name == 'pizza_max':
+                self.get_logger().info(f'Updated pizza_max: {param.value}')
+                self.pizza_max = param.value
+            elif param.name == 'Kp':
+                self.get_logger().info(f'Updated Kp: {param.value}')
+                self.Kp = param.value
+            else:
+                self.get_logger().warn(f'Unknown parameter: {param.name}')
+                # Return failure result for unknown parameters
+                return SetParametersResult(successful=False, reason=f'Unknown parameter: {param.name}')
+        # If all parameters are known, return success
+        return SetParametersResult(successful=True)
+    
     def yaml_create(self):
         empty_data = {}  # Or [] if you want an empty list
 
@@ -84,37 +109,38 @@ class controller(Node):
         
     def pizza_callback(self, msg: Bool):
         if msg.data:
-            
-            if self.saved_count <= 4:
-                self.give_pizza(self.turtle_pose)
+            if self.pizza_count <= self.pizza_max:
+                if self.saved_count <= 4:
+                    self.give_pizza(self.turtle_pose)
+                    
+                    pos = [0.0, 0.0]
+                    pos[0] = float(self.turtle_pose[0])
+                    pos[1] = float(self.turtle_pose[1])
+                    
+                    self.pos_list.append(pos)
+                    
+                    # self.get_logger().info(f'Added: {self.pos_list}')
+                    # self.get_logger().info(f'Added Pizza No.: {len(self.pos_list)}')
+                    self.get_logger().info(f'Added Pizza No.: {self.pizza_count} / {self.pizza_max:}')
+                    
                 
-                pos = [0.0, 0.0]
-                pos[0] = float(self.turtle_pose[0])
-                pos[1] = float(self.turtle_pose[1])
-                
-                self.pos_list.append(pos)
-                
-                # self.get_logger().info(f'Added: {self.pos_list}')
-                self.get_logger().info(f'Added Pizza No.: {len(self.pos_list)}')
-                
-            
-            # self.get_logger().info(f'Unknown parameter: {pos}')
+                # self.get_logger().info(f'Unknown parameter: {pos}')
 
-            
-            if self.saved_count == 1:
-                self.pizza_list['pizza_position_1'].append(pos)
                 
-            elif self.saved_count == 2:
-                self.pizza_list['pizza_position_2'].append(pos)
+                if self.saved_count == 1:
+                    self.pizza_list['pizza_position_1'].append(pos)
+                    
+                elif self.saved_count == 2:
+                    self.pizza_list['pizza_position_2'].append(pos)
 
-            elif self.saved_count == 3:
-                self.pizza_list['pizza_position_3'].append(pos)
+                elif self.saved_count == 3:
+                    self.pizza_list['pizza_position_3'].append(pos)
 
-            elif self.saved_count == 4:
-                self.pizza_list['pizza_position_4'].append(pos)
+                elif self.saved_count == 4:
+                    self.pizza_list['pizza_position_4'].append(pos)
 
-            else:
-                pass
+                else:
+                    pass
         
     def saved_callback(self, msg: Bool):
         if msg.data:
@@ -167,6 +193,7 @@ class controller(Node):
 
     def eat_pizza(self):
         self.eaten_client.call_async(Empty.Request())
+        self.get_logger().info(f'Removed Pizza No.: {self.pizza_count} / {self.pizza_max:}')
         self.pizza_count -= 1
     
     def kill(self):
@@ -215,7 +242,7 @@ class controller(Node):
                 # self.get_logger().info(f'Clearing d: {d}')
 
                 gdw = 0.1 * math.degrees(dta)
-                gd = 1.5 * d
+                gd = self.Kp * d
                 
                 self.cmd_vel(gd,gdw)
             

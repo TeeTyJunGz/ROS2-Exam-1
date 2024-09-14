@@ -51,6 +51,10 @@ def generate_launch_description():
             namespace = turtle_name_controller,
             executable = executable_name[i] + '.py',
             name = executable_name[i],
+            parameters=[
+                {'pizza_max': 20},
+                {'Kp': 1.5}
+            ]
         )
             
         elif executable_name[i] == 'teleop_scheduler':
