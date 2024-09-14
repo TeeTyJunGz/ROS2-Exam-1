@@ -48,6 +48,7 @@ class copy_controller(Node):
         self.index = 0
         self.target = []
         self.last_tasks = False
+        self.last_state = 0
         
         self.add_on_set_parameters_callback(self.set_param_callback)
 
@@ -131,7 +132,7 @@ class copy_controller(Node):
                 self.finished_pub.publish(finish)
                 
             
-            if len(self.target) > 0 and self.state < 2:
+            if len(self.target) > 0 and self.state == 0:
 
                 x = self.target[self.index][0]
                 y = self.target[self.index][1]
@@ -174,49 +175,52 @@ class copy_controller(Node):
                         
                     elif self.index == len(self.target) - 1:
                         self.target = []
-                        self.state += 1
-                        self.get_logger().info(f'clear target')
                         finish = Bool()
                         finish.data = True
                         self.finished_pub.publish(finish)
+                                                
+                        self.state = 1
+                        self.last_state = 1
+                        self.get_logger().info(f'clear target')
                 
             else:
+                self.get_logger().info(f'wait for last command!')
                 self.target = []
-                t = 0.0
-                
-                if self.last_tasks:
+                if self.last_tasks and self.last_state == 1:
                     x = 9.5
                     y = 9.5
-                else:
-                    x = 0.0
-                    y = 0.0
                     
-                dx = x - self.turtle_pose[0]
-                dy = y - self.turtle_pose[1]
-                
-                d = math.sqrt(pow(dx, 2) + pow(dy, 2))
-                
-                mouse_angle = math.atan2(dy, dx)
-                turtle_angle = self.turtle_pose[2]
-                angular_diff = mouse_angle - turtle_angle
-                dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
-                flag = 1
-                
-                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
-                # self.get_logger().info(f'Clearing d: {d}')
+                    dx = x - self.turtle_pose[0]
+                    dy = y - self.turtle_pose[1]
+                    
+                    d = math.sqrt(pow(dx, 2) + pow(dy, 2))
+                    
+                    mouse_angle = math.atan2(dy, dx)
+                    turtle_angle = self.turtle_pose[2]
+                    angular_diff = mouse_angle - turtle_angle
+                    dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
+                    flag = 1
+                    
+                    # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
+                    # self.get_logger().info(f'Clearing d: {d}')
 
-                gdw = 0.1 * math.degrees(dta)
-                gd = self.Kp * d
-                
-                self.cmd_vel(gd,gdw)
-                
-                if self.turtle_pose[2] != t:
-                    dw = math.atan2(math.sin(0.0 - self.turtle_pose[2]), math.cos(0.0 - self.turtle_pose[2]))
-                    dta = 2.5 * dw
-                    self.cmd_vel(0.0, dta)
+                    gdw = 0.1 * math.degrees(dta)
+                    gd = self.Kp * d
                     
-                self.index = 0
-                self.state = 0
+                    self.cmd_vel(gd,gdw)
+                    
+                    if abs(d) < 0.01:
+                        self.last_state = 2
+                
+                if self.last_state == 2:
+                    t = 0.0
+                    if self.turtle_pose[2] != t:
+                        dw = math.atan2(math.sin(0.0 - self.turtle_pose[2]), math.cos(0.0 - self.turtle_pose[2]))
+                        dta = 2.5 * dw
+                        self.cmd_vel(0.0, dta)
+                    
+                    self.index = 0
+                    self.state = 0
         
 
 def main(args=None):
