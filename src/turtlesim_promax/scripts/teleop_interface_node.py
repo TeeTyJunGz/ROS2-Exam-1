@@ -17,9 +17,10 @@ Moving around:
         w
     a   s   d
 
-p       : spawn pizza
-l       : save path
-o       : clear
+space bar   : stop turtle
+p           : spawn pizza
+l           : save path
+o           : clear
 
 CTRL-C to quit
 """
@@ -40,8 +41,8 @@ class KeyboardControl(Node):
 
     def __init__(self):
         super().__init__('keyboard_control')
-        self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.speed = 4.5  # Linear speed (m/s)
+        self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.speed = 3.5  # Linear speed (m/s)
         self.turn = 1.0  # Angular speed (rad/s)
         self.timeout_duration = 0.6  # Timeout for stop message (seconds)
         self.last_key_time = time.time()  # Time of the last key press
@@ -79,8 +80,8 @@ class KeyboardControl(Node):
                 twist = Twist()
                 twist.linear.x = x
                 twist.angular.z = z
-                self.publisher_.publish(twist)
-                self.get_logger().info(f'Publishing: linear.x = {x}, angular.z = {z}')
+                self.cmd_publisher.publish(twist)
+                # print(f'Publishing: linear.x = {x}, angular.z = {z}')
 
         except Exception as e:
             self.get_logger().error(f"Error: {e}")
@@ -98,7 +99,7 @@ class KeyboardControl(Node):
         twist = Twist()
         twist.linear.x = 0.0
         twist.angular.z = 0.0
-        self.publisher_.publish(twist)
+        self.cmd_publisher.publish(twist)
 
 
 def main(args=None):
