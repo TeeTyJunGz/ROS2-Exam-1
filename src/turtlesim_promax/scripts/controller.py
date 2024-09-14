@@ -47,6 +47,7 @@ class controller(Node):
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []
         self.saved_count = 1
+        self.index = 0
 
     def yaml_create(self):
         empty_data = {}  # Or [] if you want an empty list
@@ -91,6 +92,7 @@ class controller(Node):
             
             # self.get_logger().info(f'Unknown parameter: {pos}')
             self.pos_list.append(pos)
+            self.get_logger().info(f'Added: {self.pos_list}')
             
             if self.saved_count == 1:
                 self.pizza_list['pizza_position_1'].append(pos)
@@ -188,31 +190,44 @@ class controller(Node):
             self.cmd_vel(self.cmd_rc[0], self.cmd_rc[1])
             
         elif self.state == 'clear':
-            self.get_logger().info('Clear')
-        
             
-        # if len(self.mouse_list) > 0:
-        #     x, y = self.mouse_list[0]
-        #     dx = x - self.turtle_pose[0]
-        #     dy = y - self.turtle_pose[1]
+            if len(self.pos_list) > 0:
 
-        #     d = math.sqrt(pow(dx, 2) + pow(dy, 2))
-        #     mouse_angle = math.atan2(dy, dx)
-        #     turtle_angle = self.turtle_pose[2]
-        #     angular_diff = mouse_angle - turtle_angle
-        #     dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
-        #     flag = 1
+                x = self.pos_list[self.index][0]
+                y = self.pos_list[self.index][1]
+                
+                dx = x - self.turtle_pose[0]
+                dy = y - self.turtle_pose[1]
+                
+                d = math.sqrt(pow(dx, 2) + pow(dy, 2))
+                
+                mouse_angle = math.atan2(dy, dx)
+                turtle_angle = self.turtle_pose[2]
+                angular_diff = mouse_angle - turtle_angle
+                dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
+                flag = 1
+                
+                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
+                # self.get_logger().info(f'Clearing d: {d}')
+
+                gdw = 0.05 * math.degrees(dta)
+                gd = 0.5 * d
+                
+                self.cmd_vel(gd,gdw)
+            
+                if abs(d) < 0.1 and flag == 1:
+                    self.get_logger().info(f'Finished: {self.pos_list}')
+                    gd = 0.0
+                    self.eat_pizza()
+                    self.pos_list.pop(0)
+                    
+                    if self.index < len(self.pos_list):
+                        self.index += 1
+                        
+                    flag = 0
+            
         
-        # gdw = 0.1 * math.degrees(dta)
-        # gd = 3.5 * d
-        
-        # self.cmd_vel(gd,gdw)
-        
-        # if abs(d) < 0.1 and flag == 1:
-        #     gd = 0.0
-        #     self.eat_pizza()
-        #     self.mouse_list.pop(0)
-        #     flag = 0
+  
 
         
 
