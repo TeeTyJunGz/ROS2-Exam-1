@@ -24,13 +24,21 @@ The project is configured using **ROS2 launch files**, where you can specify tur
    ```bash
    cd ROS2-Exam-1
    ```
-3. Build the workspace:
+3. Add **pizza_position** to the project directory:
+   ```bash
+   mkdir pizza_position
+   ```
+4. Build the workspace:
    ```bash
    colcon build
    ```
-4. Source the workspace:
+5. Source the workspace:
    ```bash
    source install/setup.bash
+   ```
+6. Add source to .bashrc
+   ```bash
+   echo "source ~/ROS2-Exam-1/install/setup.bash" >> ~/.bashrc
    ```
    
 ## **Usage**
@@ -57,15 +65,8 @@ You can start the simulation with **custom turtle name** by passing the turtle_n
    ros2 launch turtlesim_promax teleop.launch.py turtle_name_controller:=IToon
    ```
 
-### **Launching the Teleop Keyboard Interface**
-To start the Teleop Keyboard with terminal interface, run the following command:
-
-   ```bash
-   ros2 run turtlesim_promax teleop_interface_node.py
-   ```
-
 ### **Customizing Copy Turtle Names**
-You can change the names of the 4 **"copy"** turtles in the teleop.launch.py file here at **line 51**.
+You can change the names of the 4 **copy** turtles in the **teleop.launch.py** file here at **line 51**.
 
    ```py
    copy_turtle_name = ['Foxy','Noetic','Humble','Iron']
@@ -77,5 +78,15 @@ After change.
    copy_turtle_name = ['ITeeTy','IChokun','IBeam','IRon']
    ```
 
-### **Additional Commands**
--   Save Path: The project includes functionality to save the pizza path the turtle has create. You can use the teleop keyboard to trigger path saving.
+### **Launching the Teleop Keyboard Interface**
+To start the Teleop Keyboard with terminal interface, run the following command:
+
+   ```bash
+   ros2 run turtlesim_promax teleop_interface_node.py
+   ```
+
+### **Additional Commands with Teleop Keyboard**
+-    Spawn Pizza: Spawn pizza at your teleop turtle position.
+-    Save Path: The project includes functionality to save the pizza path the turtle has create. You can use the teleop keyboard to trigger path saving.
+-    Clear Pizza: Clear all unsaved pizzas from the environment using the designated service.
+
