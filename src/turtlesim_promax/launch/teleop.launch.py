@@ -56,7 +56,7 @@ def generate_launch_description():
     # launch_description.add_action( spawn_turtle )
     
     package_name = 'turtlesim_promax'
-    executable_name = ['controller', 'teleop_scheduler', 'coppy_controller']
+    executable_name = ['controller', 'teleop_scheduler', 'coppy_controller', 'coppy_scheduler']
     copy_turtle_name = ['Foxy','Noetic','Humble','Iron']
 
     for i in range(len(executable_name)):
@@ -75,8 +75,7 @@ def generate_launch_description():
             ]
             )
             launch_description.add_action(teleop_controller)
-            
-            
+                       
         elif executable_name[i] == 'teleop_scheduler':
             
             teleop_sch = Node(
@@ -87,6 +86,16 @@ def generate_launch_description():
             )
             launch_description.add_action(teleop_sch)
 
+        elif executable_name[i] == 'coppy_scheduler':
+            
+            copy_sch = Node(
+            package = package_name,
+            namespace = 'copy',
+            executable = executable_name[i] + '.py',
+            name = executable_name[i],
+            )
+            launch_description.add_action(copy_sch)
+            
         elif executable_name[i] == 'coppy_controller':
             for j in range(len(copy_turtle_name)):
             

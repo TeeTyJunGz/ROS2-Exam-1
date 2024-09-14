@@ -5,13 +5,9 @@ from std_msgs.msg import Bool, String
 from geometry_msgs.msg import Twist
 from rcl_interfaces.msg import SetParametersResult
 
-class Scheduler(Node):
+class Copy_Scheduler(Node):
     def __init__(self):
-        super().__init__('scheduler_node')
-        self.pizza_ready = False  # Initialize default state
-        self.clear_ready = False  # Initialize default state
-        self.cmd_vel_x = 0.0  # Initialize cmd_vel x
-        self.cmd_vel_z = 0.0  # Initialize cmd_vel z
+        super().__init__('copy_scheduler_node')
         self.declare_parameter('copy_name', ['Foxy','Noetic','Humble','Iron'])
         self.copy_name = self.get_parameter('copy_name').get_parameter_value().string_array_value
 
@@ -20,9 +16,6 @@ class Scheduler(Node):
         self.create_subscription(Bool, self.copy_name[2] + '/finished_tasks', self.finished_taks_callback_3, 10)
         self.create_subscription(Bool, self.copy_name[3] + '/finished_tasks', self.finished_taks_callback_4, 10)
 
-        self.state_publisher = self.create_publisher(String, 'state', 10)
-        self.pizza_ready_publisher = self.create_publisher(String, 'PizzaReady', 10)
-        self.save_ready_publisher = self.create_publisher(String, 'SavedReady', 10)
         self.go_right_publisher = self.create_publisher(Bool, 'go_right', 10)
         
         self.add_on_set_parameters_callback(self.set_param_callback)
@@ -32,10 +25,6 @@ class Scheduler(Node):
         self.finish_2 = False
         self.finish_3 = False
         self.finish_4 = False
-        self.go_right1 = False
-        self.go_right2 = False
-        self.go_right3 = False
-        self.go_right4 = False
 
     def set_param_callback(self, params):
         for param in params:
@@ -49,29 +38,34 @@ class Scheduler(Node):
     
     def finished_taks_callback_1(self, msg: Bool):
         self.finish_1 = msg.data
-        if msg.data:
-            self.go_right1 = True
 
     def finished_taks_callback_2(self, msg: Bool):
         self.finish_2 = msg.data
-        if msg.data:
-            self.go_right2 = True
 
     def finished_taks_callback_3(self, msg: Bool):
         self.finish_3 = msg.data
-        if msg.data:
-            self.go_right3 = True
 
     def finished_taks_callback_4(self, msg: Bool):
-        self.finish_4 = msg.data  # Corrected finish_4
-        if msg.data:
-            self.go_right4 = True
-    
-    def check(self):
-        if self.go_right1 and self.go_right2 and self.go_right3 and self.go_right4:
+        self.finish_4 = msg.data
+            
+    def timer_callback(self):
+        # print('1: ', self.finish_1)
+        # print('2: ', self.finish_2)
+        # print('3: ', self.finish_3)
+        # print('4: ', self.finish_4)
+        
+        if self.finish_1 and self.finish_2 and self.finish_3 and self.finish_4:
             msg = Bool()
             msg.data = True
             self.go_right_publisher.publish(msg)
+            # print("Kuy sed suck tee")
+        
+def main(args=None):
+    rclpy.init(args=args)
+    node = Copy_Scheduler()
+    rclpy.spin(node)
+    node.destroy_node()
+    rclpy.shutdown()
 
-    def timer_callback(self):
-        self.check()
+if __name__ == '__main__':
+    main()
