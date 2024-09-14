@@ -1,8 +1,7 @@
 #!/usr/bin/python3
 import rclpy
 from rclpy.node import Node
-from std_msgs.msg import Bool, String
-from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
 from rcl_interfaces.msg import SetParametersResult
 
 class Copy_Scheduler(Node):
@@ -50,10 +49,6 @@ class Copy_Scheduler(Node):
         self.finish_4 = msg.data
             
     def timer_callback(self):
-        # print('1: ', self.finish_1)
-        # print('2: ', self.finish_2)
-        # print('3: ', self.finish_3)
-        # print('4: ', self.finish_4)
         
         if self.finish_1 and self.finish_2 and self.finish_3 and self.finish_4:
             self.countT += 1
@@ -64,7 +59,6 @@ class Copy_Scheduler(Node):
             msg = Bool()
             msg.data = True
             self.go_right_publisher.publish(msg)
-            # print("Kuy sed suck tee")
         
 def main(args=None):
     rclpy.init(args=args)

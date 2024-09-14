@@ -2,8 +2,6 @@ from launch import LaunchDescription
 from launch_ros.actions import Node
 from launch.actions import ExecuteProcess, DeclareLaunchArgument
 from launch.substitutions import LaunchConfiguration
-import os
-
 
 def generate_launch_description():
 
@@ -47,21 +45,14 @@ def generate_launch_description():
              shell =True
         )
     launch_description.add_action( kill_turtle )
-
-
-    # spawn_turtle = ExecuteProcess(
-    #     cmd=["ros2 service call /spawn_turtle turtlesim/srv/Spawn \"{x: 0.0, y: 0.0, theta: 0.0, name: 'foxy_65'}\""],
-    #     shell = True
-    # )
-    # launch_description.add_action( spawn_turtle )
     
     package_name = 'turtlesim_promax'
-    executable_name = ['controller', 'teleop_scheduler', 'coppy_controller', 'coppy_scheduler']
+    executable_name = ['teleop_controller', 'teleop_scheduler', 'coppy_controller', 'coppy_scheduler']
     copy_turtle_name = ['Foxy','Noetic','Humble','Iron']
 
     for i in range(len(executable_name)):
         
-        if executable_name[i] == 'controller':
+        if executable_name[i] == 'teleop_controller':
             
             teleop_controller = Node(
             package = package_name,
@@ -71,7 +62,8 @@ def generate_launch_description():
             parameters=[
                 {'pizza_max': 20},
                 {'Kp': 1.5},
-                {'copy_name': copy_turtle_name}
+                {'copy_name': copy_turtle_name},
+                {'mon_name': 'monitor1'}
             ]
             )
             launch_description.add_action(teleop_controller)

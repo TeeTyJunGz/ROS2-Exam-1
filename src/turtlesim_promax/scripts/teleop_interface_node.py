@@ -21,7 +21,7 @@ Moving around:
 space bar   : stop turtle
 p           : spawn pizza
 l           : save path
-o           : clear
+c           : clear
 
 Double CTRL-C to quit
 """
@@ -113,7 +113,6 @@ class KeyboardControl(Node):
                 self.clr_publisher.publish(clear)
                 
                 self.cmd_publisher.publish(twist)
-                # print(f'Publishing: linear.x = {x}, angular.z = {z}')
 
         except Exception as e:
             self.get_logger().error(f"Error: {e}")

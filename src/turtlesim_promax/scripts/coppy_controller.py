@@ -65,7 +65,7 @@ class copy_controller(Node):
         return SetParametersResult(successful=True) 
             
     def loadYAML(self):
-        with open('pizza_position/test.yaml', 'r') as file:
+        with open('pizza_position/pizza_point.yaml', 'r') as file:
             data = yaml.safe_load(file)
             return data['pizza_position_' + self.get_namespace()[1:]]
         
@@ -97,7 +97,6 @@ class copy_controller(Node):
             continue
         
         if self.turtle_client.service_is_ready():
-            # self.get_logger().info('Hee Tao')
             self.turtle_client.call_async(pos_req)
             self.turtle_count += 1
             
@@ -119,9 +118,7 @@ class copy_controller(Node):
         self.pizza_count -= 1
         
     def timer_callback(self):
-        # d = 0
-        # dta = 0
-        # flag = 0
+
         if self.toggle:
             
             if self.turtle_count == 0:
@@ -147,9 +144,6 @@ class copy_controller(Node):
                 angular_diff = mouse_angle - turtle_angle
                 dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
                 flag = 1
-                
-                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
-                # self.get_logger().info(f'Clearing d: {d}')
 
                 gdw = 0.1 * math.degrees(dta)
                 gd = self.Kp * d
@@ -157,21 +151,16 @@ class copy_controller(Node):
                 self.cmd_vel(gd,gdw)
             
                 if abs(d) < 0.01 and flag == 1:
-                    # self.get_logger().info(f'size: {len(self.pos_list)}')
-                    # self.get_logger().info(f'pizza: {target[self.index]}')
+
                     gd = 0.0
-                    # self.eat_pizza()
                     pos = [0.0, 0.0]
                     pos[0] = self.turtle_pose[0]
                     pos[1] = self.turtle_pose[1]
                     self.give_pizza(pos)
-
-                    # target.pop(0)
                         
                     flag = 0
                     if self.index < len(self.target) - 1:
                         self.index += 1
-                        # self.get_logger().info(f'pizza: {self.index}')
                         
                     elif self.index == len(self.target) - 1:
                         self.target = []
@@ -200,9 +189,6 @@ class copy_controller(Node):
                     angular_diff = mouse_angle - turtle_angle
                     dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
                     flag = 1
-                    
-                    # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
-                    # self.get_logger().info(f'Clearing d: {d}')
 
                     gdw = 0.1 * math.degrees(dta)
                     gd = self.Kp * d

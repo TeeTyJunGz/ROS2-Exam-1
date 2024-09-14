@@ -7,7 +7,7 @@ import numpy as np
 from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 
-from geometry_msgs.msg import Twist, Point, PoseStamped
+from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
 from std_msgs.msg import String, Bool
 
@@ -16,9 +16,9 @@ from turtlesim_plus_interfaces.srv import GivePosition
 from std_srvs.srv import Empty
 
 
-class controller(Node):
+class teleop_controller(Node):
     def __init__(self):
-        super().__init__('Controller_Node')
+        super().__init__('Teleop_Controller_Node')
                
         self.turtle_client = self.create_client(Spawn, '/teleop/spawn_turtle')
         self.pizza_client = self.create_client(GivePosition, '/teleop/spawn_pizza')
@@ -81,10 +81,10 @@ class controller(Node):
         return SetParametersResult(successful=True)
     
     def yaml_create(self):
-        empty_data = {}  # Or [] if you want an empty list
+        empty_data = {}
 
         # Write to the YAML file
-        with open('pizza_position/test.yaml', 'w') as file:
+        with open('pizza_position/pizza_point.yaml', 'w') as file:
             yaml.dump(empty_data, file)
             self.pizza_list = {'pizza_position_' + str(self.copy_name[0]): [],
                                'pizza_position_' + str(self.copy_name[1]): [],
@@ -93,7 +93,7 @@ class controller(Node):
                               }
      
     def yaml_write(self):
-        with open('pizza_position/test.yaml', 'w') as file:
+        with open('pizza_position/pizza_point.yaml', 'w') as file:
             yaml.dump(self.pizza_list, file)   
         if self.saved_count == 5:
             msg = Bool()
@@ -130,14 +130,8 @@ class controller(Node):
                     
                     self.pos_list.append(pos)
                     
-                    # self.get_logger().info(f'Added: {self.pos_list}')
-                    # self.get_logger().info(f'Added Pizza No.: {len(self.pos_list)}')
                     self.get_logger().info(f'Added Pizza No.: {self.pizza_count} / {self.pizza_max:}')
-                    
-                
-                # self.get_logger().info(f'Unknown parameter: {pos}')
-
-                
+                        
                 if self.saved_count == 1:
                     self.pizza_list['pizza_position_' + str(self.copy_name[0])].append(pos)
                     
@@ -191,7 +185,6 @@ class controller(Node):
             continue
         
         if self.turtle_client.service_is_ready():
-            # self.get_logger().info('Hee Tao')
             self.turtle_client.call_async(pos_req)
             self.turtle_count += 1
             
@@ -215,17 +208,12 @@ class controller(Node):
             continue
         
         if self.kill_client.service_is_ready():
-            # self.get_logger().info('Hee Tao')
             self.kill_client.call_async(name_turtle)
             self.kill_count += 1
         
     def timer_callback(self):
         
         if self.turtle_count == 0:
-            # if str(self.get_namespace()) != '/turtle1':
-            #     self.kill()
-                
-            # if self.kill_count == 1:
             self.turtle_spawn()
         
         if self.state == 'teleop':
@@ -248,18 +236,13 @@ class controller(Node):
                 angular_diff = mouse_angle - turtle_angle
                 dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
                 flag = 1
-                
-                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
-                # self.get_logger().info(f'Clearing d: {d}')
-
+            
                 gdw = 0.1 * math.degrees(dta)
                 gd = self.Kp * d
                 
                 self.cmd_vel(gd,gdw)
             
                 if abs(d) < 0.1 and flag == 1:
-                    # self.get_logger().info(f'size: {len(self.pos_list)}')
-                    # self.get_logger().info(f'pizza: {self.pos_list[self.index]}')
 
                     gd = 0.0
                     self.eat_pizza()
@@ -270,15 +253,9 @@ class controller(Node):
             else:
                 self.cmd_vel(0.0, 0.0)
 
-            
-        
-  
-
-        
-
 def main(args=None):
     rclpy.init(args=args)
-    node = controller()
+    node = teleop_controller()
     rclpy.spin(node)
     node.destroy_node()
     rclpy.shutdown()

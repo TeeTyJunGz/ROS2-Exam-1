@@ -24,7 +24,6 @@ class Scheduler(Node):
 
 
     def pizzaReady_callback(self, msg: Bool):
-        # self.pizza_ready = msg.data
         bool_msg = Bool()
         bool_msg.data = msg.data
         self.pizza_ready_publisher.publish(bool_msg)
@@ -33,7 +32,6 @@ class Scheduler(Node):
         self.clear_ready = msg.data
     
     def saveReady_callback(self, msg: Bool):
-        # self.save_ready = msg.data
         bool_msg = Bool()
         bool_msg.data = msg.data
         self.save_ready_publisher.publish(bool_msg)
@@ -50,7 +48,6 @@ class Scheduler(Node):
         else:
             msg.data = 'teleop'
         self.state_publisher.publish(msg)
-        # self.get_logger().info(f'Published state: {msg.data}')
 
     def timer_callback(self):
         self.state()
