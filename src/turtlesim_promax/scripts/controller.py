@@ -35,7 +35,6 @@ class controller(Node):
         self.kill_count = 0
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.name_pub = self.create_publisher(String, '/controller_turtle_name', 10)
         
         self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
