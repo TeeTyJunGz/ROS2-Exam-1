@@ -2,5 +2,4 @@
 build/
 install/
 log/
-pizza_position/pizza_point.yaml
-pizza_position/test.yaml
+pizza_position/
