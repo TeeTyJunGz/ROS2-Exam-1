@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 import math
 import yaml
+import time
 import rclpy
 import numpy as np
 
@@ -24,7 +25,7 @@ class copy_controller(Node):
         self.pizza_client = self.create_client(GivePosition, '/copy/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/copy/remove_turtle')
         
-        self.declare_parameter('Kp', 1.5)
+        self.declare_parameter('Kp', 2.5)
 
         self.create_timer(0.01, self.timer_callback)
 
@@ -108,6 +109,8 @@ class copy_controller(Node):
         while not self.pizza_client.wait_for_service(2):
             continue
         
+        time.sleep(0.5)
+        
         if self.pizza_client.service_is_ready():
             self.pizza_client.call_async(pos_req)
             self.pizza_count += 1
@@ -163,14 +166,14 @@ class copy_controller(Node):
                 
                 self.cmd_vel(gd,gdw)
             
-                if abs(d) < 0.1 and flag == 1:
+                if abs(d) < 0.01 and flag == 1:
                     # self.get_logger().info(f'size: {len(self.pos_list)}')
                     self.get_logger().info(f'pizza: {target[self.index]}')
                     gd = 0.0
                     # self.eat_pizza()
                     pos = [0.0, 0.0]
-                    pos[0] = target[0][0]
-                    pos[1] = target[1][0]
+                    pos[0] = self.turtle_pose[0]
+                    pos[1] = self.turtle_pose[1]
                     self.give_pizza(pos)
 
                     # target.pop(0)
@@ -178,6 +181,9 @@ class copy_controller(Node):
                     flag = 0
                     if self.index < len(target) - 1:
                         self.index += 1
+                        
+                    elif self.index == len(target) - 1:
+                        target = []
                 
             else:
                 self.cmd_vel(0.0, 0.0)
