@@ -55,7 +55,8 @@ def generate_launch_description():
     for i in range(len(executable_name)):
         
         if executable_name[i] == 'controller':
-            noise_generator = Node(
+            
+            teleop_controller = Node(
             package = package_name,
             namespace = turtle_name_controller,
             executable = executable_name[i] + '.py',
@@ -64,26 +65,30 @@ def generate_launch_description():
                 {'pizza_max': 20},
                 {'Kp': 1.5}
             ]
-        )
+            )
+            launch_description.add_action(teleop_controller)
+            
             
         elif executable_name[i] == 'teleop_scheduler':
-            noise_generator = Node(
+            
+            teleop_sch = Node(
             package = package_name,
             namespace = turtle_name_controller,
             executable = executable_name[i] + '.py',
             name = executable_name[i],
-        )
+            )
+            launch_description.add_action(teleop_sch)
 
-        elif executable_name[i] == 'coppy_controller':
-            for j in range(len(copy_turtle_name)):
+        # elif executable_name[i] == 'coppy_controller':
+        #     for j in range(len(copy_turtle_name)):
             
-                copy_control = Node(
-                package = package_name,
-                namespace = copy_turtle_name[j],
-                executable = executable_name[i] + '.py',
-                name = executable_name[i],
-                )
-                launch_description.add_action(copy_control)
+        #         copy_control = Node(
+        #         package = package_name,
+        #         namespace = copy_turtle_name[j],
+        #         executable = executable_name[i] + '.py',
+        #         name = executable_name[i],
+        #         )
+        #         launch_description.add_action(copy_control)
 
             
         # else:
@@ -93,11 +98,5 @@ def generate_launch_description():
         #     executable = executable_name[i] + '.py',
         #     name = executable_name[i],
         # )
-        launch_description.add_action(noise_generator)
         
     return launch_description
-    # spawn_turtle_2 = ExecuteProcess(
-    #     cmd=["ros2 service call /spawn_turtle turtlesim/srv/Spawn \"{x: 2.0, y: 2.0, theta: 0.0, name: 'foxy_41'}\""],
-    #     shell = True
-    # )
-    # launch_description.add_action( spawn_turtle_2 )
