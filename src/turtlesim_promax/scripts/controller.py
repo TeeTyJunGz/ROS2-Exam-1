@@ -216,13 +216,14 @@ class controller(Node):
                 self.cmd_vel(gd,gdw)
             
                 if abs(d) < 0.1 and flag == 1:
-                    self.get_logger().info(f'Finished: {self.pos_list}')
+                    
                     gd = 0.0
                     self.eat_pizza()
                     self.pos_list.pop(0)
                     
                     if self.index < len(self.pos_list):
                         self.index += 1
+                        self.get_logger().info(f'index: {self.index}')
                         
                     flag = 0
             
