@@ -5,6 +5,7 @@ import rclpy
 import numpy as np
 
 from rclpy.node import Node
+from rcl_interfaces.msg import SetParametersResult
 
 from geometry_msgs.msg import Twist, Point, PoseStamped
 from turtlesim.msg import Pose
@@ -20,8 +21,10 @@ class copy_controller(Node):
         super().__init__('Copy_Controller_Node')
                 
         self.turtle_client = self.create_client(Spawn, '/copy/spawn_turtle')
-        self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
+        self.pizza_client = self.create_client(GivePosition, '/copy/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/copy/remove_turtle')
+        
+        self.declare_parameter('Kp', 1.5)
 
         self.create_timer(0.01, self.timer_callback)
 
@@ -39,27 +42,36 @@ class copy_controller(Node):
         self.state = 'teleop'
         self.eaten_client = self.create_client(Empty, 'eat')
         
+        self.Kp = self.get_parameter('Kp').get_parameter_value().double_value
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []
         self.saved_count = 1
         self.toggle = False
+        self.index = 0
+        
+        self.add_on_set_parameters_callback(self.set_param_callback)
 
-    def yaml_create(self):
-        empty_data = {}  # Or [] if you want an empty list
-
-        # Write to the YAML file
-        with open('pizza_position/test.yaml', 'w') as file:
-            yaml.dump(empty_data, file)
-            self.pizza_list = {'pizza_position_1': [],
-                               'pizza_position_2': [],
-                               'pizza_position_3': [], 
-                               'pizza_position_4': [], 
-                              }
-     
+    def set_param_callback(self, params):
+        for param in params:
+            if param.name == 'Kp':
+                self.get_logger().info(f'Updated Kp: {param.value}')
+                self.Kp = param.value
+            else:
+                self.get_logger().warn(f'Unknown parameter: {param.name}')
+                # Return failure result for unknown parameters
+                return SetParametersResult(successful=False, reason=f'Unknown parameter: {param.name}')
+        # If all parameters are known, return success
+        return SetParametersResult(successful=True)
+    
     def yaml_write(self):
         with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(self.pizza_list, file)   
             
+    def loadYAML(self):
+        with open('pizza_position/test.yaml', 'r') as file:
+            data = yaml.safe_load(file)
+            return data['pizza_position_' + self.get_namespace()[1:]]
+        
     def cmd_vel(self, v, w):
         msg = Twist()
         msg.linear.x = v
@@ -76,8 +88,8 @@ class copy_controller(Node):
                 
     def turtle_spawn(self):
         pos_req = Spawn.Request()
-        pos_req.x = 0.0
-        pos_req.y = 0.0
+        pos_req.x = -5.0
+        pos_req.y = -5.0
         pos_req.theta = 0.0
         pos_req.name = str(self.get_namespace())
         
@@ -93,8 +105,12 @@ class copy_controller(Node):
         pos_req = GivePosition.Request()
         pos_req.x = pos[0]
         pos_req.y = pos[1]
-        self.pizza_client.call_async(pos_req)
-        self.pizza_count += 1
+        while not self.pizza_client.wait_for_service(2):
+            continue
+        
+        if self.pizza_client.service_is_ready():
+            self.pizza_client.call_async(pos_req)
+            self.pizza_count += 1
 
     def eat_pizza(self):
         self.eaten_client.call_async(Empty.Request())
@@ -117,60 +133,55 @@ class copy_controller(Node):
         # dta = 0
         # flag = 0
         if self.toggle:
+            
             if self.turtle_count == 0:
                 self.turtle_spawn()
                 
-        # if self.turtle_count < 1:
-        #     if str(self.get_namespace()) != '/turtle1':
-        #         self.kill()
-                
-        #     if self.kill_count == 1:
-        #         i = 0
-        #         turtle_name = ['Foxy', 'Noetic', 'Humble', 'Iron']
-        #         for i in range (len(turtle_name)):
-        #             self.turtle_spawn(turtle_name[i])
-        
-        # if self.state == 'teleop':
+            target = self.loadYAML()
             
-        #     self.cmd_vel(self.cmd_rc[0], self.cmd_rc[1])
-            
-        # elif self.state == 'clear':
-            
-        #     if len(self.pos_list) > 0:
-
-        #         x = self.pos_list[self.index][0]
-        #         y = self.pos_list[self.index][1]
-                
-        #         dx = x - self.turtle_pose[0]
-        #         dy = y - self.turtle_pose[1]
-                
-        #         d = math.sqrt(pow(dx, 2) + pow(dy, 2))
-                
-        #         mouse_angle = math.atan2(dy, dx)
-        #         turtle_angle = self.turtle_pose[2]
-        #         angular_diff = mouse_angle - turtle_angle
-        #         dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
-        #         flag = 1
-                
-        #         # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
-        #         # self.get_logger().info(f'Clearing d: {d}')
-
-        #         gdw = 0.05 * math.degrees(dta)
-        #         gd = 0.5 * d
-                
-        #         self.cmd_vel(gd,gdw)
-            
-        #         if abs(d) < 0.1 and flag == 1:
+            if len(target) > 0:
                     
-        #             gd = 0.0
-        #             self.eat_pizza()
-        #             self.pos_list.pop(0)
-                    
-        #             if self.index < len(self.pos_list):
-        #                 self.index += 1
-        #                 self.get_logger().info(f'index: {self.index}')
+                x = target[self.index][0]
+                y = target[self.index][1]
+                
+                dx = x - self.turtle_pose[0]
+                dy = y - self.turtle_pose[1]
+                
+                d = math.sqrt(pow(dx, 2) + pow(dy, 2))
+                
+                mouse_angle = math.atan2(dy, dx)
+                turtle_angle = self.turtle_pose[2]
+                angular_diff = mouse_angle - turtle_angle
+                dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
+                flag = 1
+                
+                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
+                # self.get_logger().info(f'Clearing d: {d}')
+
+                gdw = 0.1 * math.degrees(dta)
+                gd = self.Kp * d
+                
+                self.cmd_vel(gd,gdw)
+            
+                if abs(d) < 0.1 and flag == 1:
+                    # self.get_logger().info(f'size: {len(self.pos_list)}')
+                    self.get_logger().info(f'pizza: {target[self.index]}')
+                    gd = 0.0
+                    # self.eat_pizza()
+                    pos = [0.0, 0.0]
+                    pos[0] = target[0][0]
+                    pos[1] = target[1][0]
+                    self.give_pizza(pos)
+
+                    # target.pop(0)
                         
-        #             flag = 0
+                    flag = 0
+                    if self.index < len(target) - 1:
+                        self.index += 1
+                
+            else:
+                self.cmd_vel(0.0, 0.0)
+                self.index = 0
         
 
 def main(args=None):

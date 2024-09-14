@@ -19,15 +19,14 @@ from std_srvs.srv import Empty
 class controller(Node):
     def __init__(self):
         super().__init__('Controller_Node')
-        
-        self.yaml_create()
-        
+               
         self.turtle_client = self.create_client(Spawn, '/teleop/spawn_turtle')
         self.pizza_client = self.create_client(GivePosition, '/teleop/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/teleop/remove_turtle')
 
         self.declare_parameter('pizza_max', 20)
         self.declare_parameter('Kp', 1.5)
+        self.declare_parameter('copy_name', ['Foxy','Noetic','Humble','Iron'])
         
         self.create_timer(0.01, self.timer_callback)
 
@@ -36,18 +35,19 @@ class controller(Node):
         self.turtle_count = 0
         self.kill_count = 0
         
-        self.cmd_vel_pub = self.create_publisher(Twist, '/teleop' + self.get_namespace() + '/cmd_vel', 10)
+        self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.toggle_pub = self.create_publisher(Bool, '/toggle_turtle', 10)
         
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         
-        self.pose_sub = self.create_subscription(Pose, '/teleop' + self.get_namespace() + '/pose', self.turtle_callback, 10)
+        self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.state_sub = self.create_subscription(String, '/teleop' + self.get_namespace() + '/state', self.state_callback, 10)
         self.pizza_sub = self.create_subscription(Bool, '/teleop' + self.get_namespace() + '/pizzaReady', self.pizza_callback, 10)
         self.saved_sub = self.create_subscription(Bool, '/teleop' + self.get_namespace() + '/savedReady', self.saved_callback, 10)
 
         self.pizzaReady = False
         self.state = 'teleop'
-        self.eaten_client = self.create_client(Empty, '/teleop' + self.get_namespace() + '/eat')
+        self.eaten_client = self.create_client(Empty, 'eat')
                 
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []
@@ -55,9 +55,12 @@ class controller(Node):
         
         self.pizza_max = self.get_parameter('pizza_max').get_parameter_value().integer_value
         self.Kp = self.get_parameter('Kp').get_parameter_value().double_value
+        self.copy_name = self.get_parameter('copy_name').get_parameter_value().string_array_value
         
         # Add callback for parameter changes
         self.add_on_set_parameters_callback(self.set_param_callback)
+        self.yaml_create()
+
         
     def set_param_callback(self, params):
         for param in params:
@@ -67,6 +70,9 @@ class controller(Node):
             elif param.name == 'Kp':
                 self.get_logger().info(f'Updated Kp: {param.value}')
                 self.Kp = param.value
+            elif param.name == 'copy_name':
+                self.get_logger().info(f'Updated copy name: {param.value}')
+                self.copy_name = param.value
             else:
                 self.get_logger().warn(f'Unknown parameter: {param.name}')
                 # Return failure result for unknown parameters
@@ -80,15 +86,19 @@ class controller(Node):
         # Write to the YAML file
         with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(empty_data, file)
-            self.pizza_list = {'pizza_position_1': [],
-                               'pizza_position_2': [],
-                               'pizza_position_3': [], 
-                               'pizza_position_4': [], 
+            self.pizza_list = {'pizza_position_' + str(self.copy_name[0]): [],
+                               'pizza_position_' + str(self.copy_name[1]): [],
+                               'pizza_position_' + str(self.copy_name[2]): [], 
+                               'pizza_position_' + str(self.copy_name[3]): [], 
                               }
      
     def yaml_write(self):
         with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(self.pizza_list, file)   
+        if self.saved_count == 5:
+            msg = Bool()
+            msg.data = True
+            self.toggle_pub.publish(msg)
             
     def cmd_vel(self, v, w):
         msg = Twist()
@@ -129,16 +139,16 @@ class controller(Node):
 
                 
                 if self.saved_count == 1:
-                    self.pizza_list['pizza_position_1'].append(pos)
+                    self.pizza_list['pizza_position_' + str(self.copy_name[0])].append(pos)
                     
                 elif self.saved_count == 2:
-                    self.pizza_list['pizza_position_2'].append(pos)
+                    self.pizza_list['pizza_position_' + str(self.copy_name[1])].append(pos)
 
                 elif self.saved_count == 3:
-                    self.pizza_list['pizza_position_3'].append(pos)
+                    self.pizza_list['pizza_position_' + str(self.copy_name[2])].append(pos)
 
                 elif self.saved_count == 4:
-                    self.pizza_list['pizza_position_4'].append(pos)
+                    self.pizza_list['pizza_position_' + str(self.copy_name[3])].append(pos)
 
                 else:
                     pass
@@ -211,12 +221,12 @@ class controller(Node):
         
     def timer_callback(self):
         
-        if self.turtle_count < 1:
-            if str(self.get_namespace()) != '/turtle1':
-                self.kill()
+        if self.turtle_count == 0:
+            # if str(self.get_namespace()) != '/turtle1':
+            #     self.kill()
                 
-            if self.kill_count == 1:
-                self.turtle_spawn()
+            # if self.kill_count == 1:
+            self.turtle_spawn()
         
         if self.state == 'teleop':
             

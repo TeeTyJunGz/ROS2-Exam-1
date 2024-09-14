@@ -25,6 +25,13 @@ def generate_launch_description():
 
         )
     launch_description.add_action( turtlesim_node )
+    
+    kill_turtle = ExecuteProcess(
+        cmd=["ros2 service call /teleop/remove_turtle turtlesim/srv/Kill \"name: 'turtle1'\""],
+             shell =True
+        )
+    launch_description.add_action( kill_turtle )
+
 
     turtlesim_copy_node = Node(
             package='turtlesim_plus',
@@ -50,7 +57,7 @@ def generate_launch_description():
     
     package_name = 'turtlesim_promax'
     executable_name = ['controller', 'teleop_scheduler', 'coppy_controller']
-    copy_turtle_name = ['foxy']
+    copy_turtle_name = ['Foxy','Noetic','Humble','Iron']
 
     for i in range(len(executable_name)):
         
@@ -63,7 +70,8 @@ def generate_launch_description():
             name = executable_name[i],
             parameters=[
                 {'pizza_max': 20},
-                {'Kp': 1.5}
+                {'Kp': 1.5},
+                {'copy_name': copy_turtle_name}
             ]
             )
             launch_description.add_action(teleop_controller)
@@ -79,16 +87,16 @@ def generate_launch_description():
             )
             launch_description.add_action(teleop_sch)
 
-        # elif executable_name[i] == 'coppy_controller':
-        #     for j in range(len(copy_turtle_name)):
+        elif executable_name[i] == 'coppy_controller':
+            for j in range(len(copy_turtle_name)):
             
-        #         copy_control = Node(
-        #         package = package_name,
-        #         namespace = copy_turtle_name[j],
-        #         executable = executable_name[i] + '.py',
-        #         name = executable_name[i],
-        #         )
-        #         launch_description.add_action(copy_control)
+                copy_control = Node(
+                package = package_name,
+                namespace = copy_turtle_name[j],
+                executable = executable_name[i] + '.py',
+                name = copy_turtle_name[j] + '_' + executable_name[i],
+                )
+                launch_description.add_action(copy_control)
 
             
         # else:
