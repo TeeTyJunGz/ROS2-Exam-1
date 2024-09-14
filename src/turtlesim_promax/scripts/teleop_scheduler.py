@@ -18,25 +18,25 @@ class Scheduler(Node):
         self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
 
         self.state_publisher = self.create_publisher(String, 'state', 10)
-        self.pizza_ready_publisher = self.create_publisher(String, 'PizzaReady', 10)
-        self.save_ready_publisher = self.create_publisher(String, 'SavedReady', 10)
+        self.pizza_ready_publisher = self.create_publisher(Bool, 'pizzaReady', 10)
+        self.save_ready_publisher = self.create_publisher(Bool, 'savedReady', 10)
         self.create_timer(0.01, self.timer_callback)  # Timer to call state method at 10Hz
 
 
     def pizzaReady_callback(self, msg: Bool):
-        self.pizza_ready = msg.data
-        string_msg = String()
-        string_msg.data = 'pizzaReady'
-        self.pizza_ready_publisher.publish(string_msg)
+        # self.pizza_ready = msg.data
+        bool_msg = Bool()
+        bool_msg.data = msg.data
+        self.pizza_ready_publisher.publish(bool_msg)
         
     def clearReady_callback(self, msg: Bool):
         self.clear_ready = msg.data
     
     def saveReady_callback(self, msg: Bool):
-        self.save_ready = msg.data
-        string_msg = String()
-        string_msg.data = 'savedReady'
-        self.save_ready_publisher.publish(string_msg)
+        # self.save_ready = msg.data
+        bool_msg = Bool()
+        bool_msg.data = msg.data
+        self.save_ready_publisher.publish(bool_msg)
 
     def cmd_vel_callback(self, msg: Twist):
         # Assign values from the Twist message

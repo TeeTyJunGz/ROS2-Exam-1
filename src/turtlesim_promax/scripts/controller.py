@@ -37,8 +37,8 @@ class controller(Node):
         self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         self.state_sub = self.create_subscription(String, 'state', self.state_callback, 10)
-        self.pizza_sub = self.create_subscription(Bool, '/pizzaReady', self.pizza_callback, 10)
-        self.saved_sub = self.create_subscription(Bool, '/savedReady', self.saved_callback, 10)
+        self.pizza_sub = self.create_subscription(Bool, 'pizzaReady', self.pizza_callback, 10)
+        self.saved_sub = self.create_subscription(Bool, 'savedReady', self.saved_callback, 10)
 
         self.pizzaReady = False
         self.state = 'teleop'
@@ -47,8 +47,6 @@ class controller(Node):
         self.cmd_rc = np.array([0.0, 0.0])
         self.pos_list = []
         self.saved_count = 1
-        self.index = 0
-        self.c = 0
 
     def yaml_create(self):
         empty_data = {}  # Or [] if you want an empty list
@@ -96,8 +94,8 @@ class controller(Node):
                 
                 self.pos_list.append(pos)
                 
-                self.get_logger().info(f'Added: {self.pos_list}')
-                self.get_logger().info(f'Added: {len(self.pos_list)}')
+                # self.get_logger().info(f'Added: {self.pos_list}')
+                self.get_logger().info(f'Added Pizza No.: {len(self.pos_list)}')
                 
             
             # self.get_logger().info(f'Unknown parameter: {pos}')
@@ -184,9 +182,6 @@ class controller(Node):
             self.kill_count += 1
         
     def timer_callback(self):
-        # d = 0
-        # dta = 0
-        # flag = 0
         
         if self.turtle_count < 1:
             if str(self.get_namespace()) != '/turtle1':
@@ -219,8 +214,8 @@ class controller(Node):
                 # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
                 # self.get_logger().info(f'Clearing d: {d}')
 
-                gdw = 0.05 * math.degrees(dta)
-                gd = 3.5 * d
+                gdw = 0.1 * math.degrees(dta)
+                gd = 1.5 * d
                 
                 self.cmd_vel(gd,gdw)
             
@@ -235,8 +230,8 @@ class controller(Node):
                         
                     flag = 0
             else:
-                self.index = 0
-                self.c = 0
+                self.cmd_vel(0.0, 0.0)
+
             
         
   
