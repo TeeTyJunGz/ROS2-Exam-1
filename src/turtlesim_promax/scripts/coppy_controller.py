@@ -8,11 +8,11 @@ import numpy as np
 from rclpy.node import Node
 from rcl_interfaces.msg import SetParametersResult
 
-from geometry_msgs.msg import Twist, Point, PoseStamped
+from geometry_msgs.msg import Twist
 from turtlesim.msg import Pose
-from std_msgs.msg import String, Bool
+from std_msgs.msg import Bool
 
-from turtlesim.srv import Spawn, Kill
+from turtlesim.srv import Spawn
 from turtlesim_plus_interfaces.srv import GivePosition
 from std_srvs.srv import Empty
 
@@ -23,7 +23,6 @@ class copy_controller(Node):
                 
         self.turtle_client = self.create_client(Spawn, '/copy/spawn_turtle')
         self.pizza_client = self.create_client(GivePosition, '/copy/spawn_pizza')
-        self.kill_client = self.create_client(Kill, '/copy/remove_turtle')
         
         self.declare_parameter('Kp', 2.5)
 
@@ -32,22 +31,18 @@ class copy_controller(Node):
         self.turtle_pose = np.array([0.0, 0.0, 0.0]) #x, y, theta
         self.pizza_count = 0
         self.turtle_count = 0
-        self.kill_count = 0
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
         
         self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.tt_sub = self.create_subscription(Bool, '/toggle_turtle', self.toggle_callback, 10)
 
-        self.pizzaReady = False
-        self.state = 'teleop'
         self.eaten_client = self.create_client(Empty, 'eat')
         
         self.Kp = self.get_parameter('Kp').get_parameter_value().double_value
-        self.cmd_rc = np.array([0.0, 0.0])
-        self.pos_list = []
-        self.saved_count = 1
+
         self.toggle = False
+        self.state = 0
         self.index = 0
         
         self.add_on_set_parameters_callback(self.set_param_callback)
@@ -62,11 +57,7 @@ class copy_controller(Node):
                 # Return failure result for unknown parameters
                 return SetParametersResult(successful=False, reason=f'Unknown parameter: {param.name}')
         # If all parameters are known, return success
-        return SetParametersResult(successful=True)
-    
-    def yaml_write(self):
-        with open('pizza_position/test.yaml', 'w') as file:
-            yaml.dump(self.pizza_list, file)   
+        return SetParametersResult(successful=True) 
             
     def loadYAML(self):
         with open('pizza_position/test.yaml', 'r') as file:
@@ -118,18 +109,6 @@ class copy_controller(Node):
     def eat_pizza(self):
         self.eaten_client.call_async(Empty.Request())
         self.pizza_count -= 1
-    
-    def kill(self):
-        name_turtle = Kill.Request()
-        name_turtle.name = 'turtle1'
-        
-        while not self.kill_client.wait_for_service(2):
-            continue
-        
-        if self.kill_client.service_is_ready():
-            # self.get_logger().info('Hee Tao')
-            self.kill_client.call_async(name_turtle)
-            self.kill_count += 1
         
     def timer_callback(self):
         # d = 0
@@ -142,10 +121,16 @@ class copy_controller(Node):
                 
             target = self.loadYAML()
             
-            if len(target) > 0:
+            if len(target) > 0 and self.state < 2:
                     
-                x = target[self.index][0]
-                y = target[self.index][1]
+                if self.state == 1:
+                    
+                    x = 9.5
+                    y = 9.5
+                
+                else:
+                    x = target[self.index][0]
+                    y = target[self.index][1]
                 
                 dx = x - self.turtle_pose[0]
                 dy = y - self.turtle_pose[1]
@@ -168,7 +153,7 @@ class copy_controller(Node):
             
                 if abs(d) < 0.01 and flag == 1:
                     # self.get_logger().info(f'size: {len(self.pos_list)}')
-                    self.get_logger().info(f'pizza: {target[self.index]}')
+                    # self.get_logger().info(f'pizza: {target[self.index]}')
                     gd = 0.0
                     # self.eat_pizza()
                     pos = [0.0, 0.0]
@@ -181,12 +166,20 @@ class copy_controller(Node):
                     flag = 0
                     if self.index < len(target) - 1:
                         self.index += 1
+                        self.get_logger().info(f'pizza: {self.index}')
                         
                     elif self.index == len(target) - 1:
                         target = []
+                            
+                        self.state += 1
+                        self.get_logger().info(f'clear target')
                 
             else:
-                self.cmd_vel(0.0, 0.0)
+                t = 0.0
+                if self.turtle_pose[2] != t:
+                    dw = math.atan2(math.sin(0.0 - self.turtle_pose[2]), math.cos(0.0 - self.turtle_pose[2]))
+                    dta = 1.0 * dw
+                    self.cmd_vel(0.0, dta)
                 self.index = 0
         
 
