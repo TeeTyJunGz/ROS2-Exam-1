@@ -34,7 +34,6 @@ move_bindings = {
     's': (-1.0, 0.0),  # Move backward
     'a': (0.0, 1.0),  # Turn left
     'd': (0.0, -1.0),  # Turn right
-    'p': (1.0, 0.0),
     ' ': (0.0, 0.0)   # Stop
 }
 
@@ -46,9 +45,10 @@ class KeyboardControl(Node):
         self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.piz_publisher = self.create_publisher(Bool, '/pizzaReady', 10)
 
-        self.speed = 3.5  # Linear speed (m/s)
+        self.speed = 1.5  # Linear speed (m/s)
         self.turn = 1.0  # Angular speed (rad/s)
         self.timeout_duration = 0.6  # Timeout for stop message (seconds)
+        self.p = False
         self.last_key_time = time.time()  # Time of the last key press
         print(msg)        
         
@@ -65,18 +65,18 @@ class KeyboardControl(Node):
         tty.setraw(sys.stdin.fileno())
         key = sys.stdin.read(1)
         termios.tcsetattr(sys.stdin, termios.TCSADRAIN, settings)
+        self.p = False
         return key
 
     def run_key_listener(self):
         try:
             while True:
                 key = self.get_key()
+                if key == 'p':
+                    self.p = True
                 if key in move_bindings:
                     x = move_bindings[key][0] * self.speed
                     z = move_bindings[key][1] * self.turn
-                    
-                    if move_bindings[key][0] == 1:
-                        p = True
                     
                     self.last_key_time = time.time()  # Update last key press time
                 else:
@@ -90,7 +90,7 @@ class KeyboardControl(Node):
                 twist.angular.z = z
                 
                 pizza = Bool()
-                pizza.data = p
+                pizza.data = self.p
                 
                 self.piz_publisher.publish(pizza)
                 self.cmd_publisher.publish(twist)
