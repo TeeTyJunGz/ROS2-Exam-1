@@ -33,7 +33,9 @@ class copy_controller(Node):
         self.turtle_count = 0
         
         self.cmd_vel_pub = self.create_publisher(Twist, 'cmd_vel', 10)
+        self.finished_pub = self.create_publisher(Bool, 'finished_tasks', 10)
         
+        self.go_right = self.create_subscription(Bool, '/go_right', self.go_right_callback, 10)
         self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.tt_sub = self.create_subscription(Bool, '/toggle_turtle', self.toggle_callback, 10)
 
@@ -44,6 +46,8 @@ class copy_controller(Node):
         self.toggle = False
         self.state = 0
         self.index = 0
+        self.target = []
+        self.last_tasks = False
         
         self.add_on_set_parameters_callback(self.set_param_callback)
 
@@ -69,6 +73,9 @@ class copy_controller(Node):
         msg.linear.x = v
         msg.angular.z = w
         self.cmd_vel_pub.publish(msg)
+        
+    def go_right_callback(self, msg: Bool):
+        self.last_tasks = msg.data
         
     def turtle_callback(self, msg):
         self.turtle_pose[0] = msg.x
@@ -100,7 +107,7 @@ class copy_controller(Node):
         while not self.pizza_client.wait_for_service(2):
             continue
         
-        time.sleep(0.5)
+        time.sleep(0.1)
         
         if self.pizza_client.service_is_ready():
             self.pizza_client.call_async(pos_req)
@@ -118,19 +125,16 @@ class copy_controller(Node):
             
             if self.turtle_count == 0:
                 self.turtle_spawn()
+                self.target = self.loadYAML()
+                finish = Bool()
+                finish.data = False
+                self.finished_pub.publish(finish)
                 
-            target = self.loadYAML()
             
-            if len(target) > 0 and self.state < 2:
-                    
-                if self.state == 1:
-                    
-                    x = 9.5
-                    y = 9.5
-                
-                else:
-                    x = target[self.index][0]
-                    y = target[self.index][1]
+            if len(self.target) > 0 and self.state < 2:
+
+                x = self.target[self.index][0]
+                y = self.target[self.index][1]
                 
                 dx = x - self.turtle_pose[0]
                 dy = y - self.turtle_pose[1]
@@ -164,23 +168,55 @@ class copy_controller(Node):
                     # target.pop(0)
                         
                     flag = 0
-                    if self.index < len(target) - 1:
+                    if self.index < len(self.target) - 1:
                         self.index += 1
                         # self.get_logger().info(f'pizza: {self.index}')
                         
-                    elif self.index == len(target) - 1:
-                        target = []
-                            
+                    elif self.index == len(self.target) - 1:
+                        self.target = []
                         self.state += 1
                         self.get_logger().info(f'clear target')
+                        finish = Bool()
+                        finish.data = True
+                        self.finished_pub.publish(finish)
                 
             else:
+                self.target = []
                 t = 0.0
+                
+                if self.last_tasks:
+                    x = 9.5
+                    y = 9.5
+                else:
+                    x = 0.0
+                    y = 0.0
+                    
+                dx = x - self.turtle_pose[0]
+                dy = y - self.turtle_pose[1]
+                
+                d = math.sqrt(pow(dx, 2) + pow(dy, 2))
+                
+                mouse_angle = math.atan2(dy, dx)
+                turtle_angle = self.turtle_pose[2]
+                angular_diff = mouse_angle - turtle_angle
+                dta = math.atan2(math.sin(angular_diff), math.cos(angular_diff))
+                flag = 1
+                
+                # self.get_logger().info(f'Clearing dw: {math.degrees(dta)}')
+                # self.get_logger().info(f'Clearing d: {d}')
+
+                gdw = 0.1 * math.degrees(dta)
+                gd = self.Kp * d
+                
+                self.cmd_vel(gd,gdw)
+                
                 if self.turtle_pose[2] != t:
                     dw = math.atan2(math.sin(0.0 - self.turtle_pose[2]), math.cos(0.0 - self.turtle_pose[2]))
-                    dta = 1.0 * dw
+                    dta = 2.5 * dw
                     self.cmd_vel(0.0, dta)
+                    
                 self.index = 0
+                self.state = 0
         
 
 def main(args=None):
