@@ -175,17 +175,17 @@ class copy_controller(Node):
                         
                     elif self.index == len(self.target) - 1:
                         self.target = []
-                        finish = Bool()
-                        finish.data = True
-                        self.finished_pub.publish(finish)
-                                                
+                                                       
                         self.state = 1
                         self.last_state = 1
                         self.get_logger().info(f'clear target')
+                        finish = Bool()
+                        finish.data = True
+                        self.finished_pub.publish(finish)
                 
             else:
-                self.get_logger().info(f'wait for last command!')
                 self.target = []
+
                 if self.last_tasks and self.last_state == 1:
                     x = 9.5
                     y = 9.5
