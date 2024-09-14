@@ -17,6 +17,18 @@ The project is configured using **ROS2 launch files**, where you can specify tur
 
 ![systemArch](https://cdn.discordapp.com/attachments/1278095176824393891/1284625703513362452/Exam_1.jpg?ex=66e7506a&is=66e5feea&hm=a19ba236a2db6e3ff4c5976fb8d0876db9b8c1760b30712917b62c319aa1ba2a&)
 
+- **Package:** Turtlesim Promax.
+- **Nodes:**
+- **Keyboard Control Node:** Sends input values from the keyboard to the Scheduler Node and Teleop Controller Node.
+- **Scheduler Node:** Receives input from the Keyboard Control Node to set the state and issues commands to the Teleop Controller Node to operate according to the state.
+- **Teleop Controller Node:** Controls the Turtlesim Node to display results based on the commands from the Scheduler Node and has the ability to invoke commands from the  Turtlesim Node.
+- **Turtlesim Node:** Displays results according to the commands from the Teleop Controller Node.
+- **Copy Scheduler Node:** Receives input from the Copy Controller Node to check the state and returns values to the Copy Controller Node when the state changes.
+- **Copy Controller Node:** Controls all 4 turtles to spawn pizzas at positions saved in the YAML file and sends state values to the Copy Scheduler Node.
+- **YAML File:** Stores the pizza positions from the Teleop Controller Node.
+- **Launch File:** teleop.launch.py Runs all nodes together except for the Keyboard Control Node (Teleop Interface Node) and spawns 4 turtles.
+
+
 ## **Prerequisites**
 
 - [ROS2 Humble (or your preferred ROS2 distribution)](https://docs.ros.org/en/humble/Installation.html)
