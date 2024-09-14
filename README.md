@@ -86,7 +86,7 @@ To start the Teleop Keyboard with terminal interface, run the following command:
    ```
 
 ### **Additional Commands with Teleop Keyboard**
--    Spawn Pizza: Spawn pizza at your teleop turtle position.
--    Save Path: The project includes functionality to save the pizza path the turtle has create. You can use the teleop keyboard to trigger path saving.
--    Clear Pizza: Clear all unsaved pizzas from the environment using the designated service.
+-    **Spawn Pizza**: Spawn pizza at your teleop turtle position.
+-    **Save Path**: The project includes functionality to save the pizza path the turtle has create.
+-    **Clear Pizza**: Clear all unsaved pizzas from the environment using the designated service.
 
