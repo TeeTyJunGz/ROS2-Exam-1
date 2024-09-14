@@ -52,12 +52,12 @@ class controller(Node):
         empty_data = {}  # Or [] if you want an empty list
 
         # Write to the YAML file
-        with open('/home/teety/GitHub/ROS2-Exam-1/pizza_position/test.yaml', 'w') as file:
+        with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(empty_data, file)
             self.pizza_list = {'pizza_position': []}
      
     def yaml_write(self):
-        with open('/home/teety/GitHub/ROS2-Exam-1/pizza_position/test.yaml', 'w') as file:
+        with open('pizza_position/test.yaml', 'w') as file:
             yaml.dump(self.pizza_list, file)   
             
     def cmd_vel(self, v, w):
