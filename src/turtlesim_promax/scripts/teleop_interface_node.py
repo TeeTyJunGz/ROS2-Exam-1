@@ -8,6 +8,7 @@ import termios
 import threading
 
 from rclpy.node import Node
+from std_msgs.msg import Bool
 from geometry_msgs.msg import Twist
 
 msg = """
@@ -33,6 +34,7 @@ move_bindings = {
     's': (-1.0, 0.0),  # Move backward
     'a': (0.0, 1.0),  # Turn left
     'd': (0.0, -1.0),  # Turn right
+    'p': (1.0, 0.0),
     ' ': (0.0, 0.0)   # Stop
 }
 
@@ -42,6 +44,8 @@ class KeyboardControl(Node):
     def __init__(self):
         super().__init__('keyboard_control')
         self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
+        self.piz_publisher = self.create_publisher(Bool, '/pizzaReady', 10)
+
         self.speed = 3.5  # Linear speed (m/s)
         self.turn = 1.0  # Angular speed (rad/s)
         self.timeout_duration = 0.6  # Timeout for stop message (seconds)
@@ -54,7 +58,7 @@ class KeyboardControl(Node):
         self.key_listener_thread.start()
 
         # Timer to check if the timeout has been exceeded
-        self.create_timer(0.1, self.check_for_timeout)
+        self.create_timer(0.01, self.check_for_timeout)
 
     def get_key(self):
         """ Get keyboard input """
@@ -70,6 +74,10 @@ class KeyboardControl(Node):
                 if key in move_bindings:
                     x = move_bindings[key][0] * self.speed
                     z = move_bindings[key][1] * self.turn
+                    
+                    if move_bindings[key][0] == 1:
+                        p = True
+                    
                     self.last_key_time = time.time()  # Update last key press time
                 else:
                     x = 0.0
@@ -80,6 +88,11 @@ class KeyboardControl(Node):
                 twist = Twist()
                 twist.linear.x = x
                 twist.angular.z = z
+                
+                pizza = Bool()
+                pizza.data = p
+                
+                self.piz_publisher.publish(pizza)
                 self.cmd_publisher.publish(twist)
                 # print(f'Publishing: linear.x = {x}, angular.z = {z}')
 

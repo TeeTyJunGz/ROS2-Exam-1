@@ -121,7 +121,6 @@ class controller(Node):
         
         if self.turtle_count < 1:
             if str(self.get_namespace()) != '/turtle1':
-                self.get_logger().info(str(self.get_namespace()))
                 self.kill()
                 
             if self.kill_count == 1:
