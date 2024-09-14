@@ -32,3 +32,50 @@ The project is configured using **ROS2 launch files**, where you can specify tur
    ```bash
    source install/setup.bash
    ```
+   
+## **Usage**
+You can launch the project using the provided ROS2 launch file. The launch file allows you to control up to four turtles, whose names can be customized using the **turtle_name_controller** argument.
+
+### **Launching the Simulation**
+To start the simulation with **default turtle name**, run the following command:
+
+   ```bash
+   ros2 launch turtlesim_promax teleop.launch.py
+   ```
+   - Default turtle name is **turtle1**
+
+You can start the simulation with **custom turtle name** by passing the turtle_name_controller argument, run the following command:
+
+   ```bash
+   ros2 launch turtlesim_promax teleop.launch.py turtle_name_controller:={YOUR_CUSTOM_NAME}
+   ```
+   - Change  **{YOUR_CUSTOM_NAME}**  with your custom turtle name
+
+#### **Example**
+
+   ```bash
+   ros2 launch turtlesim_promax teleop.launch.py turtle_name_controller:=IToon
+   ```
+
+### **Launching the Teleop Keyboard Interface**
+To start the Teleop Keyboard with terminal interface, run the following command:
+
+   ```bash
+   ros2 run turtlesim_promax teleop_interface_node.py
+   ```
+
+### **Customizing Copy Turtle Names**
+You can change the names of the 4 **"copy"** turtles in the teleop.launch.py file here at **line 51**.
+
+   ```py
+   copy_turtle_name = ['Foxy','Noetic','Humble','Iron']
+   ```
+
+After change.
+
+   ```py
+   copy_turtle_name = ['ITeeTy','IChokun','IBeam','IRon']
+   ```
+
+### **Additional Commands**
+-   Save Path: The project includes functionality to save the pizza path the turtle has create. You can use the teleop keyboard to trigger path saving.
