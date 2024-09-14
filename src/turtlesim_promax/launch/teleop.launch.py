@@ -63,7 +63,6 @@ def generate_launch_description():
                 {'pizza_max': 20},
                 {'Kp': 1.5},
                 {'copy_name': copy_turtle_name},
-                {'mon_name': 'monitor1'}
             ]
             )
             launch_description.add_action(teleop_controller)
@@ -85,6 +84,9 @@ def generate_launch_description():
             namespace = 'copy',
             executable = executable_name[i] + '.py',
             name = executable_name[i],
+            parameters=[
+                {'copy_name': copy_turtle_name}
+            ]
             )
             launch_description.add_action(copy_sch)
             
