@@ -41,11 +41,19 @@ def generate_launch_description():
     # launch_description.add_action( spawn_turtle )
     
     package_name = 'turtlesim_promax'
-    executable_name = ['controller']
+    executable_name = ['controller', 'teleop_scheduler']
 
     for i in range(len(executable_name)):
         
         if executable_name[i] == 'controller':
+            noise_generator = Node(
+            package = package_name,
+            namespace = turtle_name_controller,
+            executable = executable_name[i] + '.py',
+            name = executable_name[i],
+        )
+            
+        elif executable_name[i] == 'teleop_scheduler':
             noise_generator = Node(
             package = package_name,
             namespace = turtle_name_controller,
