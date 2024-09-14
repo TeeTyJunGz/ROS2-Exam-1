@@ -23,7 +23,7 @@ p           : spawn pizza
 l           : save path
 o           : clear
 
-CTRL-C to quit
+Double CTRL-C to quit
 """
 
 # Key mappings
@@ -44,11 +44,17 @@ class KeyboardControl(Node):
         super().__init__('keyboard_control')
         self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel', 10)
         self.piz_publisher = self.create_publisher(Bool, '/pizzaReady', 10)
+        self.sav_publisher = self.create_publisher(Bool, '/savedReady', 10)
+        self.clr_publisher = self.create_publisher(Bool, '/clearReady', 10)
+
 
         self.speed = 1.5  # Linear speed (m/s)
         self.turn = 1.0  # Angular speed (rad/s)
         self.timeout_duration = 0.6  # Timeout for stop message (seconds)
         self.p = False
+        self.s = False
+        self.c = False
+
         self.last_key_time = time.time()  # Time of the last key press
         print(msg)        
         
@@ -74,6 +80,10 @@ class KeyboardControl(Node):
                 key = self.get_key()
                 if key == 'p':
                     self.p = True
+                if key == 's':
+                    self.s = True
+                if key == 'c':
+                    self.c = True
                 if key in move_bindings:
                     x = move_bindings[key][0] * self.speed
                     z = move_bindings[key][1] * self.turn
@@ -91,8 +101,15 @@ class KeyboardControl(Node):
                 
                 pizza = Bool()
                 pizza.data = self.p
-                
+                saved = Bool()
+                saved.data = self.s
+                clear = Bool()
+                clear.data = self.c
+                                
                 self.piz_publisher.publish(pizza)
+                self.sav_publisher.publish(saved)
+                self.clr_publisher.publish(clear)
+                
                 self.cmd_publisher.publish(twist)
                 # print(f'Publishing: linear.x = {x}, angular.z = {z}')
 

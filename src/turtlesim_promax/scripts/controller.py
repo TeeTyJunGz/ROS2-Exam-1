@@ -1,7 +1,8 @@
 #!/usr/bin/python3
+import math
+import yaml
 import rclpy
 import numpy as np
-import math
 
 from rclpy.node import Node
 
@@ -18,13 +19,16 @@ class controller(Node):
     def __init__(self):
         super().__init__('Controller_Node')
         
+        self.yaml_create()
+        
         self.turtle_client = self.create_client(Spawn, '/spawn_turtle')
         self.pizza_client = self.create_client(GivePosition, '/spawn_pizza')
         self.kill_client = self.create_client(Kill, '/remove_turtle')
 
         self.create_timer(0.1, self.timer_callback)
 
-        self.mouse_list = []
+        self.mouse_list
+        self.pizza_list = []
         self.turtle_pose = np.array([0.0, 0.0, 0.0]) #x, y, theta
         self.mouse_pose = np.array([0.0, 0.0]) #x, y
         self.mouseRviz_pose = np.array([0.0, 0.0]) #x, y
@@ -39,6 +43,7 @@ class controller(Node):
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
         self.state_sub = self.create_subscription(String, 'state', self.state_callback, 10)
         self.pizza_sub = self.create_subscription(Bool, '/pizzaReady', self.pizza_callback, 10)
+        self.saved_sub = self.create_subscription(Bool, '/savedReady', self.saved_callback, 10)
 
         self.pizzaReady = False
         self.state = 'teleop'
@@ -46,6 +51,18 @@ class controller(Node):
         
         self.cmd_rc = np.array([0.0, 0.0])
 
+    def yaml_create(self):
+        empty_data = {}  # Or [] if you want an empty list
+
+        # Write to the YAML file
+        with open('/home/teety/GitHub/ROS2-Exam-1/pizza_position/test.yaml', 'w') as file:
+            yaml.dump(empty_data, file)
+            self.pizza_list = {'pizza_position': []}
+     
+    def yaml_write(self):
+        with open('/home/teety/GitHub/ROS2-Exam-1/pizza_position/test.yaml', 'w') as file:
+            yaml.dump(self.pizza_list, file)   
+            
     def cmd_vel(self, v, w):
         msg = Twist()
         msg.linear.x = v
@@ -83,6 +100,11 @@ class controller(Node):
     def pizza_callback(self, msg: Bool):
         if msg.data:
             self.give_pizza(self.turtle_pose)
+            self.pizza_list['targets'].append(self.turtle_pose[:3])
+        
+    def saved_callback(self, msg: Bool):
+        if msg.data:
+            self.yaml_write()
         
     def turtle_spawn(self):
         pos_req = Spawn.Request()
