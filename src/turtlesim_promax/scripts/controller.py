@@ -7,7 +7,7 @@ from rclpy.node import Node
 
 from geometry_msgs.msg import Twist, Point, PoseStamped
 from turtlesim.msg import Pose
-from std_msgs.msg import String
+from std_msgs.msg import String, Bool
 
 from turtlesim.srv import Spawn, Kill
 from turtlesim_plus_interfaces.srv import GivePosition
@@ -37,7 +37,11 @@ class controller(Node):
         
         self.pose_sub = self.create_subscription(Pose, 'pose', self.turtle_callback, 10)
         self.cmd_sub = self.create_subscription(Twist, '/cmd_vel', self.cmd_vel_callback, 10)
-        
+        self.state_sub = self.create_subscription(String, 'state', self.state_callback, 10)
+        self.pizza_sub = self.create_subscription(Bool, '/pizzaReady', self.pizza_callback, 10)
+
+        self.pizzaReady = False
+        self.state = 'teleop'
         self.eaten_client = self.create_client(Empty, 'eat')
         
         self.cmd_rc = np.array([0.0, 0.0])
@@ -72,6 +76,13 @@ class controller(Node):
     def cmd_vel_callback(self, msg: Twist):
         self.cmd_rc[0] = msg.linear.x
         self.cmd_rc[1] = msg.angular.z
+        
+    def state_callback(self, msg: String):
+        self.state = msg.data
+        
+    def pizza_callback(self, msg: Bool):
+        if msg.data:
+            self.give_pizza(self.turtle_pose)
         
     def turtle_spawn(self):
         pos_req = Spawn.Request()
@@ -116,15 +127,20 @@ class controller(Node):
         # dta = 0
         # flag = 0
         
-        # self.turtle_name_pub()
-        
-        
         if self.turtle_count < 1:
             if str(self.get_namespace()) != '/turtle1':
                 self.kill()
                 
             if self.kill_count == 1:
                 self.turtle_spawn()
+        
+        if self.state == 'teleop':
+            
+            self.cmd_vel(self.cmd_rc[0], self.cmd_rc[1])
+            
+        elif self.state == 'clear':
+            pass 
+        
             
         # if len(self.mouse_list) > 0:
         #     x, y = self.mouse_list[0]
@@ -148,8 +164,7 @@ class controller(Node):
         #     self.eat_pizza()
         #     self.mouse_list.pop(0)
         #     flag = 0
-        
-        self.cmd_vel(self.cmd_rc[0], self.cmd_rc[1])
+
         
 
 def main(args=None):
