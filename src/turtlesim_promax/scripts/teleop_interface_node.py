@@ -2,6 +2,7 @@
 
 import sys
 import tty
+import time
 import rclpy
 import termios
 import threading
@@ -24,6 +25,8 @@ CTRL-C to quit
 """
 
 # Key mappings
+
+# Key mappings
 move_bindings = {
     'w': (1.0, 0.0),  # Move forward
     's': (-1.0, 0.0),  # Move backward
@@ -38,17 +41,18 @@ class KeyboardControl(Node):
     def __init__(self):
         super().__init__('keyboard_control')
         self.publisher_ = self.create_publisher(Twist, 'cmd_vel', 10)
-        self.speed = 0.5  # Linear speed (m/s)
+        self.speed = 4.5  # Linear speed (m/s)
         self.turn = 1.0  # Angular speed (rad/s)
-        self.timeout_duration = 0.5  # Timeout for stop message (seconds)
-        self.last_key_pressed = False
+        self.timeout_duration = 0.6  # Timeout for stop message (seconds)
+        self.last_key_time = time.time()  # Time of the last key press
         print(msg)        
+        
         # Create a separate thread to listen for key input
         self.key_listener_thread = threading.Thread(target=self.run_key_listener)
         self.key_listener_thread.daemon = True
         self.key_listener_thread.start()
 
-        # Timer to send stop messages if no key is pressed
+        # Timer to check if the timeout has been exceeded
         self.create_timer(0.1, self.check_for_timeout)
 
     def get_key(self):
@@ -65,7 +69,7 @@ class KeyboardControl(Node):
                 if key in move_bindings:
                     x = move_bindings[key][0] * self.speed
                     z = move_bindings[key][1] * self.turn
-                    self.last_key_pressed = True
+                    self.last_key_time = time.time()  # Update last key press time
                 else:
                     x = 0.0
                     z = 0.0
@@ -85,12 +89,9 @@ class KeyboardControl(Node):
             self.stop_robot()
 
     def check_for_timeout(self):
-        """ Check if no key was pressed in the last timeout duration """
-        if not self.last_key_pressed:
+        """ Check if the time since the last key press exceeds the timeout duration """
+        if time.time() - self.last_key_time > self.timeout_duration:
             self.stop_robot()
-
-        # Reset the key_pressed flag for the next loop iteration
-        self.last_key_pressed = False
 
     def stop_robot(self):
         """ Publish stop message to stop the robot """
@@ -114,3 +115,4 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
