@@ -26,6 +26,14 @@ def generate_launch_description():
         )
     launch_description.add_action( turtlesim_node )
 
+    teleop_scheuler = Node(
+        package='turtlesim_promax',
+        namespace='',
+        executable='teleop_scheduler.py',
+        name='teleop_scheuler_node'
+        )
+    launch_description.add_action(teleop_scheuler)
+
     # kill_turtle = ExecuteProcess(
     #     cmd=["ros2 service call /remove_turtle turtlesim/srv/Kill \"name: 'turtle1'\""],
     #          shell =True
